@@ -1,0 +1,22 @@
+{
+	"schemaVersion": 1,
+	"id": "wh-selector",
+	"version": "${version}",
+	"name": "Warehouse Selector",
+	"description": "Client-side helper for the Warehouse Agent: gold-axe region selection and /wh commands to push containers to the agent.",
+	"authors": ["quanwup"],
+	"license": "MIT",
+	"icon": "assets/wh-selector/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"dev.quanwup.whselector.WhSelectorClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.17.3",
+		"minecraft": "~1.21.10",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

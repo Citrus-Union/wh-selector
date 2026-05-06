@@ -1,4 +1,5 @@
 # Warehouse Selector
+[![License](https://img.shields.io/github/license/Citrus-Union/Carpet-LMS-Addition.svg)](http://www.gnu.org/licenses/gpl-3.0.html)
 
 Warehouse Selector 是一个 Minecraft Fabric 客户端辅助模组，用于为 [Carpet LMS Addition](https://carpet.lms.nm.cn/docs/) 的 `checkStorage` 功能生成和维护容器清单 JSON 文件。
 

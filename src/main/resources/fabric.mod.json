@@ -4,7 +4,7 @@
 	"version": "${version}",
 	"name": "Warehouse Selector",
 	"description": "Client-side helper for the Warehouse Agent: gold-axe region selection and /wh commands to push containers to the agent.",
-	"authors": ["quanwup"],
+	"authors": ["RiceCake7442"],
 	"license": "MIT",
 	"icon": "assets/wh-selector/icon.png",
 	"environment": "client",

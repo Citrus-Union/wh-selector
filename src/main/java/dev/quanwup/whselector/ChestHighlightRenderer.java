@@ -315,8 +315,8 @@ public class ChestHighlightRenderer {
     //$$                                float x2, float y2, float z2,
     //$$                                float nx, float ny, float nz,
     //$$                                float r, float g, float b, float a) {
-    //$$     buf.addVertex(entry, x1, y1, z1).setColor(r, g, b, a).setNormal(entry, nx, ny, nz);
-    //$$     buf.addVertex(entry, x2, y2, z2).setColor(r, g, b, a).setNormal(entry, nx, ny, nz);
+    //$$     buf.addVertex(entry, x1, y1, z1).setColor(r, g, b, a).setNormal(entry, nx, ny, nz).setLineWidth(1.0f);
+    //$$     buf.addVertex(entry, x2, y2, z2).setColor(r, g, b, a).setNormal(entry, nx, ny, nz).setLineWidth(1.0f);
     //$$ }
     //#endif
 }

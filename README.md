@@ -229,7 +229,8 @@ world/carpetlmsaddition/checkStorageList/main.json
 - [Carpet LMS Addition 文档](https://carpet.lms.nm.cn/docs/)
 - [Carpet LMS Addition 配置说明](https://carpet.lms.nm.cn/docs/config)
 - [Carpet LMS Addition GitHub](https://github.com/Citrus-Union/Carpet-LMS-Addition)
-
+- https://github.com/Fallen-Breath/preprocessor
+- https://github.com/ReplayMod/preprocessor
 ## 许可证
 
 GPL 3.0

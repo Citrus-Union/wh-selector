@@ -105,8 +105,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Collect release assets
+        run: |
+          mkdir -p release-assets-flat
+          find release-assets -type f -name '*.jar' -exec cp {} release-assets-flat/ \;
+          ls -la release-assets-flat
+
       - name: Upload release assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "${GITHUB_REF_NAME}" release-assets/*.jar --clobber
+        run: gh release upload "${GITHUB_REF_NAME}" release-assets-flat/*.jar --clobber

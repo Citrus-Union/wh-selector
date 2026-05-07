@@ -3,28 +3,79 @@
 # certain platforms or Java versions, and provides a first line of defence
 # against bad commits.
 
-name: build
-on: [pull_request, push]
+name: Build
+
+on:
+  push:
+  pull_request:
 
 jobs:
-  build:
-    runs-on: ubuntu-24.04
+  legacy-1-21:
+    name: Build 1.21.x
+    runs-on: ubuntu-latest
     steps:
-      - name: checkout repository
-        uses: actions/checkout@v6
-      - name: validate gradle wrapper
-        uses: gradle/actions/wrapper-validation@v6
-      - name: setup jdk
-        uses: actions/setup-java@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
         with:
-          java-version: '25'
-          distribution: 'microsoft'
-      - name: make gradle wrapper executable
+          distribution: zulu
+          java-version: '21'
+
+      - name: Set Gradle Java home
+        run: sed -i "s|^org\.gradle\.java\.home=.*|org.gradle.java.home=${JAVA_HOME}|" gradle.properties
+
+      - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
-      - name: build
-        run: ./gradlew build
-      - name: capture build artifacts
-        uses: actions/upload-artifact@v7
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build retained 1.21.x versions
+        run: ./gradlew build --console=plain --no-daemon
+
+      - name: Upload 1.21.x artifacts
+        uses: actions/upload-artifact@v4
         with:
-          name: Artifacts
-          path: build/libs/
+          name: wh-selector-1.21.x
+          path: versions/*/build/libs/*.jar
+          if-no-files-found: error
+
+  minecraft-26-1-2:
+    name: Build 26.1.2
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '25'
+
+      - name: Set Gradle Java home
+        run: sed -i "s|^org\.gradle\.java\.home=.*|org.gradle.java.home=${JAVA_HOME}|" gradle.properties
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build Minecraft 26.1.2
+        run: ./gradlew -Pinclude26=true :26.1.2:build --console=plain --no-daemon
+
+      - name: Upload 26.1.2 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wh-selector-26.1.2
+          path: versions/26.1.2/build/libs/*.jar
+          if-no-files-found: error

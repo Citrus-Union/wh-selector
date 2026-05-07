@@ -1,0 +1,81 @@
+apply plugin: 'fabric-loom'
+apply plugin: 'com.replaymod.preprocess'
+apply plugin: 'maven-publish'
+
+def unobfuscated = project.findProperty('mapping_type') == 'mojmap'
+def javaVersion = (project.findProperty('java_version') ?: '21').toString().toInteger()
+
+base { archivesName = "$id-$name" }
+
+version = rootProject.version
+group = rootProject.group
+
+repositories {
+}
+
+dependencies {
+minecraft "com.mojang:minecraft:$name"
+if (!unobfuscated) {
+mappings "net.fabricmc:yarn:$yarn_mappings:v2"
+} else {
+loom.noIntermediateMappings()
+mappings loom.layered {
+mappings file('identity-mojmap.tiny')
+}
+}
+add(unobfuscated ? 'implementation' : 'modImplementation', "net.fabricmc:fabric-loader:$loader_version")
+add(unobfuscated ? 'implementation' : 'modImplementation', "net.fabricmc.fabric-api:fabric-api:$fabric_api_version")
+}
+
+loom {
+mods {
+"$id" {
+sourceSet sourceSets.main
+}
+}
+}
+
+processResources {
+inputs.property 'id', id
+inputs.property 'version', version
+inputs.property 'minecraft_version', project.name
+inputs.property 'loader_version', loader_version
+
+filesMatching('fabric.mod.json') {
+expand id: id, version: version, minecraft_version: project.name, loader_version: loader_version
+}
+}
+
+tasks.withType(JavaCompile).configureEach {
+it.options.release = javaVersion
+}
+
+java {
+sourceCompatibility = JavaVersion.toVersion(javaVersion)
+targetCompatibility = JavaVersion.toVersion(javaVersion)
+}
+
+if (!unobfuscated) {
+java.withSourcesJar()
+}
+
+tasks.matching { it.name == 'remapSourcesJar' }.configureEach {
+enabled = project.findProperty('mapping_type') != 'mojmap'
+}
+
+jar {
+inputs.property 'projectName', project.name
+from('../../LICENSE') {
+rename { "${it}_${project.name}" }
+}
+}
+
+publishing {
+publications {
+create('mavenJava', MavenPublication) {
+from components.java
+}
+}
+repositories {
+}
+}

@@ -92,7 +92,11 @@ public class FileStore {
         }
 
         int added = 0, scanned = 0, skippedExcluded = 0, updated = 0;
+        //#if MC>=260000
+        //$$ BlockPos.MutableBlockPos cur = new BlockPos.MutableBlockPos();
+        //#else
         BlockPos.Mutable cur = new BlockPos.Mutable();
+        //#endif
         for (int x = min.getX(); x <= max.getX(); x++) {
             for (int y = min.getY(); y <= max.getY(); y++) {
                 for (int z = min.getZ(); z <= max.getZ(); z++) {
@@ -100,7 +104,11 @@ public class FileStore {
                     BlockState state = world.getBlockState(cur);
                     if (state.isAir()) continue;
                     Block block = state.getBlock();
+                    //#if MC>=260000
+                    //$$ Identifier id = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(block);
+                    //#else
                     Identifier id = Registries.BLOCK.getId(block);
+                    //#endif
                     String type = id.getPath(); // e.g. "chest"
                     if (!CONTAINER_BLOCKS.contains(type)) continue;
                     scanned++;

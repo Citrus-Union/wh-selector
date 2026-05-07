@@ -82,7 +82,11 @@ public class WhSelectorClient implements ClientModInitializer {
     public static void notifyClient(Text msg) {
         var mc = net.minecraft.client.MinecraftClient.getInstance();
         if (mc.player != null) {
+            //#if MC>=260000
+            //$$ mc.player.sendSystemMessage(Component.literal("[WH] ").withStyle(ChatFormatting.GOLD).append(msg));
+            //#else
             mc.player.sendMessage(Text.literal("[WH] ").formatted(Formatting.GOLD).append(msg), false);
+            //#endif
         }
     }
 }

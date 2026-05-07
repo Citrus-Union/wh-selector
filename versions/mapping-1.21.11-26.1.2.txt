@@ -1,0 +1,53 @@
+net.minecraft.block.Block net.minecraft.world.level.block.Block
+net.minecraft.block.BlockState net.minecraft.world.level.block.state.BlockState
+net.minecraft.client.MinecraftClient net.minecraft.client.Minecraft
+net.fabricmc.fabric.api.client.command.v2.ClientCommandManager net.fabricmc.fabric.api.client.command.v2.ClientCommands
+net.minecraft.client.render.Camera net.minecraft.client.Camera
+net.minecraft.client.render.RenderLayer net.minecraft.client.renderer.rendertype.RenderType
+net.minecraft.client.render.RenderPipeline com.mojang.blaze3d.pipeline.RenderPipeline
+net.minecraft.client.render.RenderPipelines net.minecraft.client.renderer.RenderPipelines
+net.minecraft.client.render.VertexConsumer com.mojang.blaze3d.vertex.VertexConsumer
+net.minecraft.client.render.VertexConsumerProvider net.minecraft.client.renderer.MultiBufferSource
+net.minecraft.client.util.math.MatrixStack com.mojang.blaze3d.vertex.PoseStack
+net.minecraft.client.world.ClientWorld net.minecraft.client.multiplayer.ClientLevel
+net.minecraft.entity.player.PlayerEntity net.minecraft.world.entity.player.Player
+net.minecraft.item.Items net.minecraft.world.item.Items
+net.minecraft.registry.Registries net.minecraft.core.registries.BuiltInRegistries
+net.minecraft.registry.RegistryKey net.minecraft.resources.ResourceKey
+net.minecraft.text.Text net.minecraft.network.chat.Component
+net.minecraft.util.ActionResult net.minecraft.world.InteractionResult
+net.minecraft.util.Formatting net.minecraft.ChatFormatting
+net.minecraft.util.Hand net.minecraft.world.InteractionHand
+net.minecraft.util.Identifier net.minecraft.resources.Identifier
+net.minecraft.util.math.BlockPos net.minecraft.core.BlockPos
+net.minecraft.util.math.BlockPos.Mutable net.minecraft.core.BlockPos.MutableBlockPos
+net.minecraft.util.math.Vec3d net.minecraft.world.phys.Vec3
+net.minecraft.client.MinecraftClient world level
+net.minecraft.world.World net.minecraft.world.level.Level
+net.minecraft.world.World isClient isClientSide
+net.minecraft.world.World isClient() isClientSide()
+net.minecraft.world.World getRegistryKey dimension
+net.minecraft.world.World getRegistryKey() dimension()
+net.minecraft.registry.RegistryKey getValue identifier
+net.minecraft.registry.RegistryKey getValue() identifier()
+net.minecraft.resources.ResourceKey location identifier
+net.minecraft.resources.ResourceKey location() identifier()
+net.minecraft.world.level.Level isClient() isClientSide()
+net.minecraft.world.level.Level getRegistryKey() dimension()
+net.minecraft.resources.ResourceKey getValue() identifier()
+net.minecraft.client.world.ClientWorld isClient isClientSide
+net.minecraft.client.multiplayer.ClientLevel isClient() isClientSide()
+net.minecraft.util.math.BlockPos toImmutable immutable
+net.minecraft.util.math.BlockPos toImmutable() immutable()
+net.minecraft.core.BlockPos toImmutable() immutable()
+net.minecraft.text.Text formatted withStyle
+net.minecraft.text.Text formatted() withStyle()
+net.minecraft.text.MutableText formatted withStyle
+net.minecraft.text.MutableText formatted() withStyle()
+net.minecraft.network.chat.MutableComponent formatted withStyle
+net.minecraft.network.chat.MutableComponent formatted() withStyle()
+net.minecraft.network.chat.Component formatted() withStyle()
+net.minecraft.entity.LivingEntity getMainHandStack getMainHandItem
+net.minecraft.entity.LivingEntity getMainHandStack() getMainHandItem()
+net.minecraft.world.entity.LivingEntity getMainHandStack() getMainHandItem()
+

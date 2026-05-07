@@ -1,0 +1,112 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-1-21:
+    name: Build 1.21.x
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '21'
+
+      - name: Set Gradle Java home
+        run: sed -i "s|^org\.gradle\.java\.home=.*|org.gradle.java.home=${JAVA_HOME}|" gradle.properties
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build retained 1.21.x versions
+        run: ./gradlew build --console=plain --no-daemon
+
+      - name: Upload 1.21.x jars
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-jars-1.21.x
+          path: versions/*/build/libs/*.jar
+          if-no-files-found: error
+
+  build-26-1-2:
+    name: Build 26.1.2
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '25'
+
+      - name: Set Gradle Java home
+        run: sed -i "s|^org\.gradle\.java\.home=.*|org.gradle.java.home=${JAVA_HOME}|" gradle.properties
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build Minecraft 26.1.2
+        run: ./gradlew -Pinclude26=true :26.1.2:build --console=plain --no-daemon
+
+      - name: Upload 26.1.2 jars
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-jars-26.1.2
+          path: versions/26.1.2/build/libs/*.jar
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub release
+    runs-on: ubuntu-latest
+    needs:
+      - build-1-21
+      - build-26-1-2
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download release jars
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Create release from draft
+        id: release
+        uses: release-drafter/release-drafter@v6
+        with:
+          publish: true
+          tag: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload release assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${GITHUB_REF_NAME}" release-assets/*.jar --clobber

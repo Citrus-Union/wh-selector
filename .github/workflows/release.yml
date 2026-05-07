@@ -108,7 +108,7 @@ jobs:
       - name: Collect release assets
         run: |
           mkdir -p release-assets-flat
-          find release-assets -type f -name '*.jar' -exec cp {} release-assets-flat/ \;
+          find release-assets -type f -name '*.jar' ! -name '*-sources.jar' -exec cp {} release-assets-flat/ \;
           ls -la release-assets-flat
 
       - name: Upload release assets

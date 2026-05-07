@@ -98,7 +98,12 @@ public class ChestHighlightRenderer {
     //$$             .layeringTransform(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
     //$$             .outputTarget(OutputTarget.ITEM_ENTITY_TARGET)
     //$$             .build();
-    //$$         java.lang.reflect.Method of = RenderLayer.class.getDeclaredMethod("of", String.class, RenderSetup.class);
+    //$$         java.lang.reflect.Method of;
+    //$$         try {
+    //$$             of = RenderLayer.class.getDeclaredMethod("of", String.class, RenderSetup.class);
+    //$$         } catch (NoSuchMethodException e) {
+    //$$             of = RenderLayer.class.getDeclaredMethod("method_75940", String.class, RenderSetup.class);
+    //$$         }
     //$$         of.setAccessible(true);
     //$$         return (RenderLayer) of.invoke(null, "wh_selector_xray_lines", setup);
     //$$     } catch (ReflectiveOperationException e) {
@@ -240,8 +245,13 @@ public class ChestHighlightRenderer {
                              float x2, float y2, float z2,
                              float nx, float ny, float nz,
                              float r, float g, float b, float a) {
+        //#if MC>=12111
+        //$$ buf.vertex(mat, x1, y1, z1).color(r, g, b, a).normal(entry, nx, ny, nz).lineWidth(1.0f);
+        //$$ buf.vertex(mat, x2, y2, z2).color(r, g, b, a).normal(entry, nx, ny, nz).lineWidth(1.0f);
+        //#else
         buf.vertex(mat, x1, y1, z1).color(r, g, b, a).normal(entry, nx, ny, nz);
         buf.vertex(mat, x2, y2, z2).color(r, g, b, a).normal(entry, nx, ny, nz);
+        //#endif
     }
     //#endif
 

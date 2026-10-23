@@ -24,7 +24,19 @@ mappings file('identity-mojmap.tiny')
 }
 }
 add(unobfuscated ? 'implementation' : 'modImplementation', "net.fabricmc:fabric-loader:$loader_version")
-add(unobfuscated ? 'implementation' : 'modImplementation', "net.fabricmc.fabric-api:fabric-api:$fabric_api_version")
+// fabric-api modules ship .classtweaker files in the official namespace, but loader
+// requires them in the runtime (named) namespace, so they must pass through loom's remapper.
+add('modImplementation', "net.fabricmc.fabric-api:fabric-api:$fabric_api_version")
+if (unobfuscated) {
+// fabric-loader 0.19.x no longer carries ASM/Mixin as transitive deps, but Knot
+// needs them on the classpath at dev launch; production launchers provide their own.
+implementation 'org.ow2.asm:asm:9.10.1'
+implementation 'org.ow2.asm:asm-analysis:9.10.1'
+implementation 'org.ow2.asm:asm-commons:9.10.1'
+implementation 'org.ow2.asm:asm-tree:9.10.1'
+implementation 'org.ow2.asm:asm-util:9.10.1'
+implementation 'net.fabricmc:sponge-mixin:0.17.4+mixin.0.8.7'
+}
 }
 
 loom {

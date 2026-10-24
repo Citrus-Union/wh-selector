@@ -46,11 +46,21 @@ Warehouse Selector 的作用就是帮助你在客户端游戏内快速生成或�
 
 ## 运行环境
 
-- Minecraft `1.21.10`
-- Fabric Loader `>=0.17.3`
+支持以下 Minecraft 版本（同一份源码，构建时按版本预处理）：
+
+| Minecraft | Fabric Loader | Java |
+| --- | --- | --- |
+| `1.21.1` ~ `1.21.11` | `>=0.17.3` | `21` |
+| `26.1.2`、`26.2` | `>=0.19.2` | `25` |
+
 - Fabric API
-- Java `21` 或更高版本
 - 客户端模组，仅需要安装在客户端
+
+26.x 的构建需要显式开启：
+
+```powershell
+.\gradlew.bat -Pinclude26=true :26.2:build
+```
 
 ## 安装方法
 

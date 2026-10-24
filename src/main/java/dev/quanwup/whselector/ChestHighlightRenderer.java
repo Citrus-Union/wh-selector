@@ -38,19 +38,13 @@ import org.joml.Matrix4f;
 import java.util.List;
 //#endif
 //#if MC>=260000
-//$$ import com.mojang.blaze3d.vertex.PoseStack;
-//$$ import com.mojang.blaze3d.vertex.VertexConsumer;
 //$$ import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 //$$ import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
-//$$ import net.minecraft.client.Camera;
 //$$ import net.minecraft.client.Minecraft;
-//$$ import net.minecraft.client.renderer.MultiBufferSource;
-//$$ import net.minecraft.client.renderer.RenderPipelines;
-//$$ import net.minecraft.client.renderer.rendertype.LayeringTransform;
-//$$ import net.minecraft.client.renderer.rendertype.OutputTarget;
-//$$ import net.minecraft.client.renderer.rendertype.RenderSetup;
-//$$ import net.minecraft.client.renderer.rendertype.RenderType;
 //$$ import net.minecraft.core.BlockPos;
+//$$ import net.minecraft.gizmos.GizmoStyle;
+//$$ import net.minecraft.gizmos.Gizmos;
+//$$ import net.minecraft.world.phys.AABB;
 //$$ import net.minecraft.world.phys.Vec3;
 //$$ import java.util.List;
 //#endif
@@ -67,6 +61,8 @@ public class ChestHighlightRenderer {
     //#if MC<260000
     // Normal containers — cyan-ish, fully opaque.
     private static final float R = 0.20f, G = 0.95f, B = 1.00f, A = 1.00f;
+    // Selection outline — gold, to match the gold axe.
+    private static final float SR = 1.00f, SG = 0.78f, SB = 0.20f, SA = 1.00f;
     //#if MC==12110
     private static final RenderPipeline X_RAY_LINES_PIPELINE = RenderPipelines.register(
         RenderPipeline.builder(RenderPipelines.RENDERTYPE_LINES_SNIPPET)
@@ -117,23 +113,11 @@ public class ChestHighlightRenderer {
     //#endif
 
     //#if MC>=260000
-    //$$ private static final float R = 0.20f, G = 0.95f, B = 1.00f, A = 1.00f;
-    //$$ private static final RenderType X_RAY_LINES = createRenderLayer260000();
-    //$$
-    //$$ private static RenderType createRenderLayer260000() {
-    //$$     try {
-    //$$         RenderSetup setup = RenderSetup.builder(RenderPipelines.LINES)
-    //$$             .bufferSize(1536)
-    //$$             .setLayeringTransform(LayeringTransform.VIEW_OFFSET_Z_LAYERING)
-    //$$             .setOutputTarget(OutputTarget.ITEM_ENTITY_TARGET)
-    //$$             .createRenderSetup();
-    //$$         java.lang.reflect.Method create = RenderType.class.getDeclaredMethod("create", String.class, RenderSetup.class);
-    //$$         create.setAccessible(true);
-    //$$         return (RenderType) create.invoke(null, "wh_selector_xray_lines", setup);
-    //$$     } catch (ReflectiveOperationException e) {
-    //$$         throw new ExceptionInInitializerError(e);
-    //$$     }
-    //$$ }
+    //$$ /** ARGB stroke colour used by the gizmo API. */
+    //$$ private static final int STROKE_COLOR = 0xFF33F2FF;
+    //$$ /** ARGB stroke colour for the selection outline (gold). */
+    //$$ private static final int SEL_COLOR = 0xFFFFC833;
+    //$$ private static final GizmoStyle SEL_STYLE = GizmoStyle.stroke(SEL_COLOR, 2.0f);
     //#endif
 
     public static void register() {
@@ -155,15 +139,19 @@ public class ChestHighlightRenderer {
 
     //#if MC<260000
     private static void onRender(WorldRenderContext ctx) {
-        if (!enabled) return;
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.world == null || mc.player == null) return;
+
+        // The selection outline is drawn even when the container highlight is hidden.
+        Selection sel = WhSelectorClient.SEL;
+        boolean selActive = sel.pos1 != null || sel.pos2 != null;
+        if (!enabled && !selActive) return;
 
         String dim = mc.world.getRegistryKey().getValue().toString();
         List<RegisteredChests.Entry> entries = RegisteredChests.forDim(dim);
         lastRenderTick = System.currentTimeMillis();
         lastDrawn = 0;
-        if (entries.isEmpty()) return;
+        if (entries.isEmpty() && !selActive) return;
 
         Camera camera = mc.gameRenderer.getCamera();
         //#if MC>=12111
@@ -193,23 +181,50 @@ public class ChestHighlightRenderer {
         Matrix4f mat = entry.getPositionMatrix();
 
         int drawn = 0;
-        for (RegisteredChests.Entry e : entries) {
-            BlockPos p = e.pos();
-            double dx = p.getX() + 0.5 - cam.x;
-            double dy = p.getY() + 0.5 - cam.y;
-            double dz = p.getZ() + 0.5 - cam.z;
-            if (dx * dx + dy * dy + dz * dz > maxSq) continue;
+        if (enabled) {
+            for (RegisteredChests.Entry e : entries) {
+                BlockPos p = e.pos();
+                double dx = p.getX() + 0.5 - cam.x;
+                double dy = p.getY() + 0.5 - cam.y;
+                double dz = p.getZ() + 0.5 - cam.z;
+                if (dx * dx + dy * dy + dz * dz > maxSq) continue;
 
-            // Slight outward inflation to avoid z-fighting with block faces.
-            float x0 = p.getX() - 0.002f;
-            float y0 = p.getY() - 0.002f;
-            float z0 = p.getZ() - 0.002f;
-            float x1 = p.getX() + 1f + 0.002f;
-            float y1 = p.getY() + 1f + 0.002f;
-            float z1 = p.getZ() + 1f + 0.002f;
+                // Slight outward inflation to avoid z-fighting with block faces.
+                float x0 = p.getX() - 0.002f;
+                float y0 = p.getY() - 0.002f;
+                float z0 = p.getZ() - 0.002f;
+                float x1 = p.getX() + 1f + 0.002f;
+                float y1 = p.getY() + 1f + 0.002f;
+                float z1 = p.getZ() + 1f + 0.002f;
 
-            drawBox(buf, entry, mat, x0, y0, z0, x1, y1, z1, R, G, B, A);
-            drawn++;
+                drawBox(buf, entry, mat, x0, y0, z0, x1, y1, z1, R, G, B, A);
+                drawn++;
+            }
+        }
+
+        // Selection outline — gold, always drawn regardless of the highlight toggle.
+        if (sel.complete()) {
+            BlockPos a = sel.min();
+            BlockPos b = sel.max();
+            drawBox(buf, entry, mat,
+                a.getX() - 0.005f, a.getY() - 0.005f, a.getZ() - 0.005f,
+                b.getX() + 1.005f, b.getY() + 1.005f, b.getZ() + 1.005f,
+                SR, SG, SB, SA);
+        } else {
+            if (sel.pos1 != null) {
+                BlockPos p = sel.pos1;
+                drawBox(buf, entry, mat,
+                    p.getX() - 0.005f, p.getY() - 0.005f, p.getZ() - 0.005f,
+                    p.getX() + 1.005f, p.getY() + 1.005f, p.getZ() + 1.005f,
+                    SR, SG, SB, SA);
+            }
+            if (sel.pos2 != null) {
+                BlockPos p = sel.pos2;
+                drawBox(buf, entry, mat,
+                    p.getX() - 0.005f, p.getY() - 0.005f, p.getZ() - 0.005f,
+                    p.getX() + 1.005f, p.getY() + 1.005f, p.getZ() + 1.005f,
+                    SR, SG, SB, SA);
+            }
         }
 
         ms.pop();
@@ -257,76 +272,64 @@ public class ChestHighlightRenderer {
 
     //#if MC>=260000
     //$$ private static void onRender260000(LevelRenderContext ctx) {
-    //$$     if (!enabled) return;
     //$$     Minecraft mc = Minecraft.getInstance();
     //$$     if (mc.level == null || mc.player == null) return;
+    //$$
+    //$$     // The selection outline is drawn even when the container highlight is hidden.
+    //$$     Selection sel = WhSelectorClient.SEL;
+    //$$     boolean selActive = sel.pos1 != null || sel.pos2 != null;
+    //$$     if (!enabled && !selActive) return;
     //$$
     //$$     String dim = mc.level.dimension().identifier().toString();
     //$$     List<RegisteredChests.Entry> entries = RegisteredChests.forDim(dim);
     //$$     lastRenderTick = System.currentTimeMillis();
     //$$     lastDrawn = 0;
-    //$$     if (entries.isEmpty()) return;
+    //$$     if (entries.isEmpty() && !selActive) return;
     //$$
-    //$$     Camera camera = mc.gameRenderer.getMainCamera();
-    //$$     Vec3 cam = camera.position();
+    //$$     // The camera position the frame is being rendered from. Taking it from the
+    //$$     // render state avoids GameRenderer.getMainCamera() vs mainCamera() across 26.x.
+    //$$     Vec3 cam = ctx.levelState().cameraRenderState.pos;
     //$$     double maxSq = renderDistance * renderDistance;
     //$$
-    //$$     PoseStack ms = ctx.poseStack();
-    //$$     if (ms == null) return;
-    //$$
-    //$$     MultiBufferSource source = ctx.bufferSource();
-    //$$     VertexConsumer buf = source.getBuffer(X_RAY_LINES);
-    //$$
-    //$$     PoseStack.Pose entry = ms.last();
+    //$$     GizmoStyle style = GizmoStyle.stroke(STROKE_COLOR, 1.0f);
     //$$     int drawn = 0;
-    //$$     for (RegisteredChests.Entry e : entries) {
-    //$$         BlockPos p = e.pos();
-    //$$         double dx = p.getX() + 0.5 - cam.x;
-    //$$         double dy = p.getY() + 0.5 - cam.y;
-    //$$         double dz = p.getZ() + 0.5 - cam.z;
-    //$$         if (dx * dx + dy * dy + dz * dz > maxSq) continue;
+    //$$     if (enabled) {
+    //$$         for (RegisteredChests.Entry e : entries) {
+    //$$             BlockPos p = e.pos();
+    //$$             double dx = p.getX() + 0.5 - cam.x;
+    //$$             double dy = p.getY() + 0.5 - cam.y;
+    //$$             double dz = p.getZ() + 0.5 - cam.z;
+    //$$             if (dx * dx + dy * dy + dz * dz > maxSq) continue;
     //$$
-    //$$         float x0 = (float) (p.getX() - cam.x - 0.002);
-    //$$         float y0 = (float) (p.getY() - cam.y - 0.002);
-    //$$         float z0 = (float) (p.getZ() - cam.z - 0.002);
-    //$$         float x1 = (float) (p.getX() - cam.x + 1.002);
-    //$$         float y1 = (float) (p.getY() - cam.y + 1.002);
-    //$$         float z1 = (float) (p.getZ() - cam.z + 1.002);
-    //$$
-    //$$         drawBox260000(buf, entry, x0, y0, z0, x1, y1, z1, R, G, B, A);
-    //$$         drawn++;
+    //$$             // Slight outward inflation to avoid z-fighting with block faces.
+    //$$             AABB box = new AABB(
+    //$$                 p.getX() - 0.002, p.getY() - 0.002, p.getZ() - 0.002,
+    //$$                 p.getX() + 1.002, p.getY() + 1.002, p.getZ() + 1.002
+    //$$             );
+    //$$             // setAlwaysOnTop keeps the wireframe visible through terrain.
+    //$$             Gizmos.cuboid(box, style).setAlwaysOnTop();
+    //$$             drawn++;
+    //$$         }
     //$$     }
     //$$
-    //$$     if (source instanceof MultiBufferSource.BufferSource bufferSource) {
-    //$$         bufferSource.endBatch(X_RAY_LINES);
+    //$$     // Selection outline — gold, always drawn regardless of the highlight toggle.
+    //$$     if (sel.complete()) {
+    //$$         BlockPos a = sel.min();
+    //$$         BlockPos b = sel.max();
+    //$$         AABB selBox = new AABB(
+    //$$             a.getX() - 0.005, a.getY() - 0.005, a.getZ() - 0.005,
+    //$$             b.getX() + 1.005, b.getY() + 1.005, b.getZ() + 1.005
+    //$$         );
+    //$$         Gizmos.cuboid(selBox, SEL_STYLE).setAlwaysOnTop();
+    //$$     } else {
+    //$$         if (sel.pos1 != null) {
+    //$$             Gizmos.cuboid(new AABB(sel.pos1).inflate(0.005), SEL_STYLE).setAlwaysOnTop();
+    //$$         }
+    //$$         if (sel.pos2 != null) {
+    //$$             Gizmos.cuboid(new AABB(sel.pos2).inflate(0.005), SEL_STYLE).setAlwaysOnTop();
+    //$$         }
     //$$     }
     //$$     lastDrawn = drawn;
-    //$$ }
-    //$$
-    //$$ private static void drawBox260000(VertexConsumer buf, PoseStack.Pose entry,
-    //$$                                   float x0, float y0, float z0, float x1, float y1, float z1,
-    //$$                                   float r, float g, float b, float a) {
-    //$$     line260000(buf, entry, x0, y0, z0, x1, y0, z0, 1, 0, 0, r, g, b, a);
-    //$$     line260000(buf, entry, x1, y0, z0, x1, y0, z1, 0, 0, 1, r, g, b, a);
-    //$$     line260000(buf, entry, x1, y0, z1, x0, y0, z1, -1, 0, 0, r, g, b, a);
-    //$$     line260000(buf, entry, x0, y0, z1, x0, y0, z0, 0, 0, -1, r, g, b, a);
-    //$$     line260000(buf, entry, x0, y1, z0, x1, y1, z0, 1, 0, 0, r, g, b, a);
-    //$$     line260000(buf, entry, x1, y1, z0, x1, y1, z1, 0, 0, 1, r, g, b, a);
-    //$$     line260000(buf, entry, x1, y1, z1, x0, y1, z1, -1, 0, 0, r, g, b, a);
-    //$$     line260000(buf, entry, x0, y1, z1, x0, y1, z0, 0, 0, -1, r, g, b, a);
-    //$$     line260000(buf, entry, x0, y0, z0, x0, y1, z0, 0, 1, 0, r, g, b, a);
-    //$$     line260000(buf, entry, x1, y0, z0, x1, y1, z0, 0, 1, 0, r, g, b, a);
-    //$$     line260000(buf, entry, x1, y0, z1, x1, y1, z1, 0, 1, 0, r, g, b, a);
-    //$$     line260000(buf, entry, x0, y0, z1, x0, y1, z1, 0, 1, 0, r, g, b, a);
-    //$$ }
-    //$$
-    //$$ private static void line260000(VertexConsumer buf, PoseStack.Pose entry,
-    //$$                                float x1, float y1, float z1,
-    //$$                                float x2, float y2, float z2,
-    //$$                                float nx, float ny, float nz,
-    //$$                                float r, float g, float b, float a) {
-    //$$     buf.addVertex(entry, x1, y1, z1).setColor(r, g, b, a).setNormal(entry, nx, ny, nz).setLineWidth(1.0f);
-    //$$     buf.addVertex(entry, x2, y2, z2).setColor(r, g, b, a).setNormal(entry, nx, ny, nz).setLineWidth(1.0f);
     //$$ }
     //#endif
 }
